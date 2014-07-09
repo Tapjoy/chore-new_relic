@@ -6,8 +6,8 @@ require 'chore/new_relic/version'
 Gem::Specification.new do |spec|
   spec.name          = "chore-new_relic"
   spec.version       = Chore::NewRelic::VERSION
-  spec.authors       = ["Tanner Burson"]
-  spec.email         = ["me@tannerburson.com"]
+  spec.authors       = ["Tapjoy"]
+  spec.email         = ["eng-group-arch@tapjoy.com"]
   spec.summary       = "Tapjoy specific NewRelic integration for chore"
   spec.description   = "A repository for Tapjoy specific NewRelic integrations"
   spec.homepage      = ""
