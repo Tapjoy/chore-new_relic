@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Chore::NewRelic::VERSION
   spec.authors       = ["Tapjoy"]
   spec.email         = ["eng-group-arch@tapjoy.com"]
-  spec.summary       = "Tapjoy specific NewRelic integration for chore"
-  spec.description   = "A repository for Tapjoy specific NewRelic integrations"
+  spec.summary       = "NewRelic integration for chore"
+  spec.description   = "A repository for NewRelic integrations"
   spec.homepage      = ""
   spec.license       = "MIT"
 
