@@ -1,6 +1,6 @@
 # Chore::NewRelic
 
-TODO: Write a gem description
+NewRelic integration for [Chore](https://github.com/Tapjoy/chore).
 
 ## Installation
 
@@ -18,12 +18,6 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Configure NewRelic [according to their documentation](https://github.com/newrelic/rpm).
 
-## Contributing
-
-1. Fork it ( http://github.com/<my-github-username>/chore-new_relic/fork )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+The plugin uses your application's NewRelic configuration, and will begin sending custom events for your Chore jobs. You should begin seeing data show up under "Non-Web Transactions" once this is setup.
