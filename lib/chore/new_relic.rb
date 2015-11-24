@@ -1,4 +1,5 @@
 gem 'newrelic_rpm', '>= 3.7.0'
+require 'new_relic/agent/instrumentation'
 require 'new_relic/agent/instrumentation/controller_instrumentation'
 
 require 'chore'
