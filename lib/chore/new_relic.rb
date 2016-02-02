@@ -34,15 +34,15 @@ DependencyDetection.defer do
       add_transaction_tracer :perform_job, :name => 'perform', :class_name => '#{args[0].name}', :category => 'OtherTransaction/ChoreJob', :params => 'args[1]'
     end
 
-    if NewRelic::LanguageSupport.can_fork?
-      ## Start the NewRelic agent in the parent process so we only have one agent thread sending data.
-      ::Chore.add_hook(:before_first_fork) do
-        NewRelic::Agent.manual_start(:dispatcher   => :resque, # We look close enough to resque for this to work
-                                     :sync_startup => true,
-                                     :start_channel_listener => true) # This lets us control which workers report where.
-                                                                      # We could get fancy, but we won't really need it.
-      end
+    ## Start the NewRelic agent in the parent process so we only have one agent thread sending data.
+    ::Chore.add_hook(:before_start) do
+      NewRelic::Agent.manual_start(:dispatcher   => :resque, # We look close enough to resque for this to work
+                                   :sync_startup => true,
+                                   :start_channel_listener => true) # This lets us control which workers report where.
+                                                                    # We could get fancy, but we won't really need it.
+    end
 
+    if NewRelic::LanguageSupport.can_fork?
       ## In the parent, setup a report channel (pipe) tied to this worker's id. Since we have the worker before we fork
       ## it's `object_id` will be the same in the child. So it's a convenient unique id for parent/child to share.
       ## The `pid` would seem to be obvious, but is slightly less trivial to access on the parent end, at the right time.
