@@ -71,9 +71,7 @@ DependencyDetection.defer do
         # data to the parent process.  We're putting off solving this problem for now
         # by just timing out calls to NewRelic.
         begin
-          Timeout.timeout(1) do
-            NewRelic::Agent.shutdown
-          end
+          NewRelic::Agent.agent.flush_pipe_data
         rescue Timeout::Error => ex
           Chore.logger.info("Failed to shut down NewRelic: Timeout exceeded")
         end
@@ -82,7 +80,7 @@ DependencyDetection.defer do
 
     ## Before Chore shuts itself down, tell NewRelic to do the same.
     ::Chore.add_hook(:before_shutdown) do
-      NewRelic::Agent.shutdown
+      NewRelic::Agent.agent.flush_pipe_data
     end
   end
 end
