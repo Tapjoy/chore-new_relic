@@ -1,4 +1,4 @@
-gem 'newrelic_rpm', '>= 3.7.0'
+gem 'newrelic_rpm', '>= 3.15.0'
 require 'new_relic/agent/instrumentation'
 require 'new_relic/agent/instrumentation/controller_instrumentation'
 
@@ -58,6 +58,7 @@ DependencyDetection.defer do
           # Only suppress reporting Instance/Busy for forked children
           # Traced errors UI relies on having the parent process report that metric
           NewRelic::Agent.after_fork(:report_to_channel => worker.object_id, :report_instance_busy => false)
+          NewRelic::Agent::TransactionState.tl_clear_for_testing
           block.call(worker)
         rescue StandardError => e
           NewRelic::Agent.agent.error_collector.notice_error(e, {:request_params => { :message => 'Error within fork.' }})
