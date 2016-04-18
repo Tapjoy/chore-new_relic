@@ -1,4 +1,3 @@
-gem 'newrelic_rpm', '>= 3.15.0'
 require 'new_relic/agent/instrumentation'
 require 'new_relic/agent/instrumentation/controller_instrumentation'
 
