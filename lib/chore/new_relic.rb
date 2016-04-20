@@ -1,4 +1,3 @@
-gem 'newrelic_rpm', '>= 3.7.0'
 require 'new_relic/agent/instrumentation'
 require 'new_relic/agent/instrumentation/controller_instrumentation'
 
@@ -58,6 +57,33 @@ DependencyDetection.defer do
           # Only suppress reporting Instance/Busy for forked children
           # Traced errors UI relies on having the parent process report that metric
           NewRelic::Agent.after_fork(:report_to_channel => worker.object_id, :report_instance_busy => false)
+
+          # HACK! - This line was added when upgrading from rpm 3.7.3 to 3.15.0
+          #
+          # In rpm 3.8.1 the way that Transaction tracking is implemented changed in such a way that it is
+          # no longer compatible with chore's forked worker strategy.
+          #
+          # Prior to rpm 3.8.1 each method wrapped with #add_transaction_tracer has a Transaction object that
+          # would take care of recording statistics and reporting the results when the traced method completed.
+          # For nested transactions, a stack of Transaction objects was maintained and as each method completed,
+          # the Transaction would be stopped, the metrics reported, and the Transaction popped from the stack.
+          #
+          # Starting with rpm 3.8.1, a single Transaction object is used to represent a potentially nested sequence
+          # of traced methods. Only when the top level traced method finishes executiion, does the Transaction report the
+          # metrics for itelf and childen.
+          #
+          # Because Chore forks a new process to perform the job's work, a parent Transaction is created in the
+          # the message consumer process and is inherited in the child worker process. When the child process finishes
+          # its work, Transaction.stop is called but does not report the traced metrics because it is not the top level
+          # method that was traced.
+          #
+          # In order to resolve this issue, the below line clears the Transactional context in the forked worker so that
+          # metrics will be reported.
+          #
+          # Relevant rpm code:
+          # https://github.com/newrelic/rpm/blob/3.15.0.314/lib/new_relic/agent/transaction.rb#L146
+          # https://github.com/newrelic/rpm/blob/3.15.0.314/lib/new_relic/agent/transaction_state.rb#L32
+          NewRelic::Agent::TransactionState.tl_clear_for_testing
           block.call(worker)
         rescue StandardError => e
           NewRelic::Agent.agent.error_collector.notice_error(e, {:request_params => { :message => 'Error within fork.' }})
