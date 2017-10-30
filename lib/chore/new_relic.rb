@@ -81,12 +81,12 @@ DependencyDetection.defer do
           # metrics will be reported.
           #
           # Relevant rpm code:
-          # https://github.com/newrelic/rpm/blob/3.15.0.314/lib/new_relic/agent/transaction.rb#L146
-          # https://github.com/newrelic/rpm/blob/3.15.0.314/lib/new_relic/agent/transaction_state.rb#L32
-          NewRelic::Agent::TransactionState.tl_clear_for_testing
+          # https://github.com/newrelic/rpm/blob/4.5.0.337/lib/new_relic/agent/transaction.rb#L150
+          # https://github.com/newrelic/rpm/blob/4.5.0.337/lib/new_relic/agent/transaction_state.rb#L30
+          NewRelic::Agent::TransactionState.tl_clear
           block.call(worker)
         rescue StandardError => e
-          NewRelic::Agent.agent.error_collector.notice_error(e, {:request_params => { :message => 'Error within fork.' }})
+          NewRelic::Agent.notice_error(e, {:custom_params => { :message => 'Error within fork.' }})
           raise e
         end
       end
