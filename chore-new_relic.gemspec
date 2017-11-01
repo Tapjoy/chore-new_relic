@@ -21,5 +21,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency("chore-core", [">= 1.8.4"])
   spec.add_development_dependency("bundler", [">= 0"])
   spec.add_development_dependency("rake")
-  spec.add_runtime_dependency(%q<newrelic_rpm>, ['>= 3.15.0'])
+  spec.add_runtime_dependency(%q<newrelic_rpm>, ['>= 4.5.0'])
 end
