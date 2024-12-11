@@ -52,38 +52,20 @@ DependencyDetection.defer do
       ::Chore.add_hook(:within_fork) do |worker, &block|
         begin
           # Reset the logger to avoid deadlocks
+          # TODO: Unclear if this is needed on newer versions of newrelic_rpm / Ruby
           NewRelic::Agent.logger = NewRelic::Agent::AgentLogger.new(NewRelic::Control.instance.root, nil)
 
           # Only suppress reporting Instance/Busy for forked children
           # Traced errors UI relies on having the parent process report that metric
           NewRelic::Agent.after_fork(:report_to_channel => worker.object_id, :report_instance_busy => false)
 
-          # HACK! - This line was added when upgrading from rpm 3.7.3 to 3.15.0
+          # Unless the application explicitly enables the `clear_transaction_state_after_fork` setting,
+          # we're going to have problems with transactions not being reported properly.  Rather than
+          # rely on that setting everywhere, we explicitly make the call ourselves.
           #
-          # In rpm 3.8.1 the way that Transaction tracking is implemented changed in such a way that it is
-          # no longer compatible with chore's forked worker strategy.
-          #
-          # Prior to rpm 3.8.1 each method wrapped with #add_transaction_tracer has a Transaction object that
-          # would take care of recording statistics and reporting the results when the traced method completed.
-          # For nested transactions, a stack of Transaction objects was maintained and as each method completed,
-          # the Transaction would be stopped, the metrics reported, and the Transaction popped from the stack.
-          #
-          # Starting with rpm 3.8.1, a single Transaction object is used to represent a potentially nested sequence
-          # of traced methods. Only when the top level traced method finishes executiion, does the Transaction report the
-          # metrics for itelf and childen.
-          #
-          # Because Chore forks a new process to perform the job's work, a parent Transaction is created in the
-          # the message consumer process and is inherited in the child worker process. When the child process finishes
-          # its work, Transaction.stop is called but does not report the traced metrics because it is not the top level
-          # method that was traced.
-          #
-          # In order to resolve this issue, the below line clears the Transactional context in the forked worker so that
-          # metrics will be reported.
-          #
-          # Relevant rpm code:
-          # https://github.com/newrelic/rpm/blob/4.5.0.337/lib/new_relic/agent/transaction.rb#L150
-          # https://github.com/newrelic/rpm/blob/4.5.0.337/lib/new_relic/agent/transaction_state.rb#L30
-          NewRelic::Agent::TransactionState.tl_clear
+          # Reference: https://github.com/newrelic/newrelic-ruby-agent/blob/43e462143af24fcfdb56a51e08e5fe890f07bceb/lib/new_relic/agent/agent.rb#L301-L303
+          NewRelic::Agent::Tracer.clear_state
+
           block.call(worker)
         rescue StandardError => e
           NewRelic::Agent.notice_error(e, {:custom_params => { :message => 'Error within fork.' }})
